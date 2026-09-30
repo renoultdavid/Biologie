@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drone ROV - Expédition Cambrienne</title>
+  <style>
+    :root {
+      /* Palette Gris de Payne & Mode Nuit */
+      --bg-payne-deep: #10161f;
+      --bg-payne-card: #18222d;
+      --bg-payne-elevated: #202c3a;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.4);
+
+      /* Accents scientifiques */
+      --color-predator: #ff5252;
+      --color-size: #f59e0b;
+      --color-vision: #38bdf8;
+      --color-fossil: #a855f7;
+      --terminal-green: #38ef7d;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-payne-deep);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* En-tête sobre */
+    header {
+      background: rgba(16, 22, 31, 0.95);
+      padding: 0.8rem 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-tag {
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      color: #041017;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 5px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .brand h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* Bouton d'accès au carnet d'expédition */
+    .btn-logbook-toggle {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid var(--border-glow);
+      color: var(--color-vision);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-logbook-toggle:hover {
+      background: var(--color-vision);
+      color: #041017;
+    }
+
+    /* Scène Principale */
+    .scene-container {
+      position: relative;
+      margin-top: 55px;
+      width: 100vw;
+      height: calc(100vh - 55px);
+      background: 
+        radial-gradient(ellipse at 50% 50%, rgba(16, 22, 31, 0.1) 0%, rgba(8, 12, 17, 0.85) 90%),
+        url('https://drive.google.com/thumbnail?id=118W3D2MYyAycygi95yvpkqZWwtxQcqka&sz=w1920') no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    /* 1. HUD DU DRONE SOUS-MARIN */
+    .hud-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Coins de visée tactique */
+    .hud-corner {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border-color: rgba(56, 189, 248, 0.45);
+      border-style: solid;
+    }
+    .hud-tl { top: 20px; left: 20px; border-width: 2px 0 0 2px; }
+    .hud-tr { top: 20px; right: 20px; border-width: 2px 2px 0 0; }
+    .hud-bl { bottom: 20px; left: 20px; border-width: 0 0 2px 2px; }
+    .hud-br { bottom: 20px; right: 20px; border-width: 0 2px 2px 0; }
+
+    /* Télémétrie en direct */
+    .hud-telemetry {
+      position: absolute;
+      top: 24px;
+      left: 65px;
+      font-family: monospace;
+      font-size: 0.78rem;
+      color: rgba(56, 189, 248, 0.85);
+      line-height: 1.6;
+      background: rgba(16, 22, 31, 0.75);
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Radar Sonar circulaire en haut à droite */
+    .hud-sonar {
+      position: absolute;
+      top: 24px;
+      right: 65px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(16, 22, 31, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sonar-sweep {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border-right: 2px solid var(--terminal-green);
+      animation: sweepAnim 3s linear infinite;
+    }
+    .sonar-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--color-predator);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--color-predator);
+    }
+    @keyframes sweepAnim {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* 2. SILHOUETTES MARINES QUI TRAVERSENT LE FOND */
+    .ambient-silhouette {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.16;
+      filter: blur(1.5px);
+      z-index: 4;
+      animation: swimAcross 38s linear infinite;
+    }
+    @keyframes swimAcross {
+      0% { transform: translate(-20vw, 40vh) scale(0.7) rotate(2deg); }
+      50% { transform: translate(60vw, 35vh) scale(0.75) rotate(-2deg); }
+      100% { transform: translate(120vw, 45vh) scale(0.8) rotate(3deg); }
+    }
+
+    /* 3. POINTS D'INTÉRÊT & COMPARATEUR D'ÉCHELLE AU SURVOL */
+    .target-marker {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 25;
+    }
+
+    .reticle {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reticle-circle {
+      position: absolute;
+      inset: 0;
+      border: 2px dashed rgba(56, 189, 248, 0.6);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+    .reticle-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--color-predator);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--color-predator);
+    }
+
+    .target-marker:hover .reticle-circle {
+      border: 2px solid var(--terminal-green);
+      transform: scale(1.25) rotate(45deg);
+      box-shadow: 0 0 14px rgba(56, 239, 125, 0.5);
+    }
+
+    /* Bulle de verrouillage biométrique & Comparateur de taille */
+    .lock-preview {
+      position: absolute;
+      left: 48px;
+      top: 50%;
+      transform: translateY(-50%) scale(0.92);
+      background: rgba(18, 25, 34, 0.94);
+      border: 1px solid var(--border-glow);
+      padding: 10px 14px;
+      border-radius: 8px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+    .target-marker:hover .lock-preview {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+    }
+    .lock-status {
+      font-size: 0.68rem;
+      font-family: monospace;
+      color: var(--terminal-green);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .lock-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .scale-compare {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+      color: var(--color-size);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 4. CARNET DE BORD D'EXPÉDITION (VOLET RÉTRACTABLE) */
+    .logbook-drawer {
+      position: fixed;
+      top: 55px;
+      right: -360px;
+      width: 350px;
+      height: calc(100vh - 55px);
+      background: rgba(16, 22, 31, 0.96);
+      border-left: 1px solid var(--border-glow);
+      backdrop-filter: blur(14px);
+      z-index: 60;
+      transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.6);
+    }
+    .logbook-drawer.open {
+      right: 0;
+    }
+
+    .logbook-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+    .logbook-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Jauge de progression */
+    .progress-box {
+      background: var(--bg-payne-elevated);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 1.5rem;
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      width: 25%;
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #10b981);
+      transition: width 0.4s ease;
+    }
+
+    /* Cartes de collection du carnet */
+    .specimen-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    .specimen-card {
+      background: var(--bg-payne-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0.5;
+      transition: all 0.2s ease;
+    }
+    .specimen-card.unlocked {
+      opacity: 1;
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .specimen-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+    .specimen-card.unlocked .specimen-icon {
+      background: rgba(56, 189, 248, 0.2);
+    }
+    .specimen-info strong {
+      display: block;
+      font-size: 0.85rem;
+      color: #fff;
+    }
+    .specimen-info span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* 5. FENÊTRE MODALE & LECTEUR YOUTUBE OFFICIEL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 12, 16, 0.88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .card {
+      background: var(--bg-payne-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 740px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+      position: relative;
+      transform: scale(0.96);
+      transition: transform 0.25s ease;
+    }
+    .modal-overlay.active .card {
+      transform: scale(1);
+    }
+    .btn-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      transition: background 0.2s;
+      z-index: 30;
+    }
+    .btn-close:hover {
+      background: var(--color-predator);
+    }
+
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: #000;
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
+      overflow: hidden;
+    }
+    .video-viewport iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .card-content {
+      padding: 1.8rem 2rem;
+    }
+    .fiche-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.4rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .species-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .species-subtitle {
+      font-size: 0.92rem;
+      color: var(--color-vision);
+      font-style: italic;
+      margin-top: 2px;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 82, 82, 0.12);
+      color: var(--color-predator);
+      border: 1px solid rgba(255, 82, 82, 0.35);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .stat-box {
+      background: var(--bg-payne-elevated);
+      border-radius: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-subtle);
+      border-left-width: 4px;
+    }
+    .stat-box.c-predator { border-left-color: var(--color-predator); }
+    .stat-box.c-size { border-left-color: var(--color-size); }
+    .stat-box.c-vision { border-left-color: var(--color-vision); }
+    .stat-box.c-fossil { border-left-color: var(--color-fossil); }
+
+    .stat-head {
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .desc-text {
+      font-size: 0.94rem;
+      line-height: 1.65;
+      color: #cbd5e1;
+      margin-bottom: 1.4rem;
+    }
+
+    .view-container {
+      transition: opacity 0.4s ease;
+    }
+    #view-next-card {
+      display: none;
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .next-card-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--color-vision);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    .btn-return-video {
+      margin-top: 1.8rem;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="brand-tag">ROV SUB-01</span>
+      <h1>Exploration Cambrienne — Schistes de Burgess</h1>
+    </div>
+    
+    <button class="btn-logbook-toggle" onclick="toggleLogbook()">
+      📓 Carnet de Mission (<span id="log-count">1</span>/4)
+    </button>
+  </header>
+
+  <main class="scene-container">
+    
+    <!-- 1. INTERFACE TACTIQUE HUD -->
+    <div class="hud-overlay">
+      <div class="hud-corner hud-tl"></div>
+      <div class="hud-corner hud-tr"></div>
+      <div class="hud-corner hud-bl"></div>
+      <div class="hud-corner hud-br"></div>
+
+      <!-- Données télémétriques -->
+      <div class="hud-telemetry">
+        <div>PROFONDEUR : <span id="tele-depth">-165.4 m</span></div>
+        <div>TEMPÉRATURE : 18.2 °C</div>
+        <div>O₂ DISSOUS : 3.6 mg/L</div>
+        <div>CHRONO : -508 Ma</div>
+      </div>
+
+      <!-- Mini-Sonar -->
+      <div class="hud-sonar">
+        <div class="sonar-sweep"></div>
+        <div class="sonar-dot"></div>
+      </div>
+    </div>
+
+    <!-- 2. SILHOUETTE FLOTTANTE EN ARRIÈRE-PLAN -->
+    <svg class="ambient-silhouette" width="220" height="90" viewBox="0 0 200 80">
+      <path d="M10,40 Q60,10 140,25 Q180,30 190,40 Q180,50 140,55 Q60,70 10,40 Z" fill="#000"/>
+      <!-- Nageoires latérales -->
+      <path d="M40,30 Q30,10 50,15 M70,25 Q60,5 80,10 M100,25 Q90,5 110,12" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+      <path d="M40,50 Q30,70 50,65 M70,55 Q60,75 80,70 M100,55 Q90,75 110,68" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+    </svg>
+
+    <!-- 3. CIBLE ANOMALOCARIS (AVEC VERROUILLAGE & COMPARATEUR DE TAILLE) -->
+    <div class="target-marker" style="top: 45%; left: 52%;" onclick="openModal('modal-anomalocaris')">
+      <div class="reticle">
+        <div class="reticle-circle"></div>
+        <div class="reticle-dot"></div>
+      </div>
+      
+      <!-- Bulle comparateur d'échelle -->
+      <div class="lock-preview">
+        <div class="lock-status">◉ CIBLE VERROUILLÉE // APEX</div>
+        <div class="lock-title">Anomalocaris canadensis</div>
+        <div class="scale-compare">
+          📏 <strong>Taille réelle : 1 m</strong> (Équivalent : Un bras d'adulte)
+        </div>
+      </div>
+    </div>
+
+    <!-- Cible Opabinia -->
+    <div class="target-marker" style="top: 68%; left: 24%;" onclick="openModal('modal-anomalocaris')">
+      <div class="reticle">
+        <div class="reticle-circle" style="border-color: rgba(56, 189, 248, 0.4);"></div>
+        <div class="reticle-dot" style="background: var(--color-vision); box-shadow: 0 0 8px var(--color-vision);"></div>
+      </div>
+      <div class="lock-preview">
+        <div class="lock-status" style="color: var(--color-vision);">◉ CIBLE DÉTECTÉE</div>
+        <div class="lock-title">Opabinia regalis</div>
+        <div class="scale-compare">
+          📏 <strong>Taille réelle : 7 cm</strong> (Équivalent : Une boîte d'allumettes)
+        </div>
+      </div>
+    </div>
+
+    <!-- Cible Trilobite -->
+    <div class="target-marker" style="top: 80%; left: 78%;" onclick="openModal('modal-anomalocaris')">
+      <div class="reticle">
+        <div class="reticle-circle" style="border-color: rgba(245, 158, 11, 0.4);"></div>
+        <div class="reticle-dot" style="background: var(--color-size); box-shadow: 0 0 8px var(--color-size);"></div>
+      </div>
+      <div class="lock-preview">
+        <div class="lock-status" style="color: var(--color-size);">◉ CIBLE DÉTECTÉE</div>
+        <div class="lock-title">Olenoides serratus (Trilobite)</div>
+        <div class="scale-compare">
+          📏 <strong>Taille réelle : 10 cm</strong> (Équivalent : La paume d'une main)
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 4. CARNET DE BORD D'EXPÉDITION RÉTRACTABLE -->
+  <aside class="logbook-drawer" id="logbook">
+    <div class="logbook-head">
+      <div class="logbook-title">
+        <span>📓</span> Carnet d'Expédition
+      </div>
+      <button onclick="toggleLogbook()" style="background:none; border:none; color:#fff; font-size:1.3rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <div class="progress-box">
+      <div class="progress-labels">
+        <span>Spécimens répertoriés</span>
+        <strong id="progress-text">1 sur 4 (25%)</strong>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="specimen-list">
+      <div class="specimen-card unlocked">
+        <div class="specimen-icon">🦐</div>
+        <div class="specimen-info">
+          <strong>Anomalocaris</strong>
+          <span>Superprédateur — Débloqué</span>
+        </div>
+      </div>
+      <div class="specimen-card">
+        <div class="specimen-icon">❓</div>
+        <div class="specimen-info">
+          <strong>Opabinia</strong>
+          <span>5 yeux & trompe — À analyser</span>
+        </div>
+      </div>
+      <div class="specimen-card">
+        <div class="specimen-icon">❓</div>
+        <div class="specimen-info">
+          <strong>Trilobite</strong>
+          <span>Carapace articulée — À analyser</span>
+        </div>
+      </div>
+      <div class="specimen-card">
+        <div class="specimen-icon">❓</div>
+        <div class="specimen-info">
+          <strong>Hallucigenia</strong>
+          <span>Épines défensives — Non répertorié</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 5. FICHE D'IDENTITÉ POP-UP & VIDÉO -->
+  <div class="modal-overlay" id="modal-anomalocaris">
+    <div class="card">
+      <button class="btn-close" onclick="closeModal('modal-anomalocaris')">&times;</button>
+      
+      <!-- Vue Vidéo -->
+      <div id="view-video-card" class="view-container">
+        <div class="video-viewport">
+          <div id="yt-player-container"></div>
+        </div>
+
+        <div class="card-content">
+          <div class="fiche-header">
+            <div>
+              <h2 class="species-name">Anomalocaris canadensis</h2>
+              <div class="species-subtitle">« Crevette étrange » — Radiodonte géant</div>
+            </div>
+            <div class="badge-status">Apex Predator</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box c-predator">
+              <div class="stat-head">Régime</div>
+              <div class="stat-val" style="color: #ff8585;">Carnivore actif</div>
+            </div>
+            <div class="stat-box c-size">
+              <div class="stat-head">Envergure</div>
+              <div class="stat-val" style="color: #fde047;">60 à 100 cm</div>
+            </div>
+            <div class="stat-box c-vision">
+              <div class="stat-head">Vision stéréoscopique</div>
+              <div class="stat-val" style="color: #7dd3fc;">16 000 facettes</div>
+            </div>
+            <div class="stat-box c-fossil">
+              <div class="stat-head">Formation</div>
+              <div class="stat-val" style="color: #d8b4fe;">Schistes de Burgess</div>
+            </div>
+          </div>
+
+          <p class="desc-text">
+            Premier superprédateur marin avéré de l'histoire animale. Grâce à ses lobes latéraux ondulants, Anomalocaris nageait avec vélocité. Ses deux grands appendices frontaux barbelés servaient à rabattre trilobites et vers marins directement vers son disque buccal broyeur.
+          </p>
+        </div>
+      </div>
+
+      <!-- Vue Enchaînement automatique -->
+      <div id="view-next-card" class="view-container">
+        <div class="next-card-banner">
+          ✓ Séquence vidéo terminée — Spécimen consigné dans le carnet
+        </div>
+        <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; color: #fff;">Fiche En Attente de Données</h2>
+        <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem; font-size: 0.95rem; line-height: 1.6;">
+          Cette fiche prendra le relais automatiquement. Vous pourrez y insérer les caractéristiques ou l'illustration du prochain spécimen dès que vous m'aurez fourni les éléments.
+        </p>
+        <button class="btn-return-video" onclick="showVideoCard()">
+          ↺ Revoir la vidéo d'Anomalocaris
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    // Pilotage du carnet rétractable
+    function toggleLogbook() {
+      document.getElementById('logbook').classList.toggle('open');
+    }
+
+    // Effet télémétrique drone
+    setInterval(() => {
+      const depth = -165 - (Math.random() * 0.8).toFixed(1);
+      document.getElementById('tele-depth').textContent = depth + ' m';
+    }, 2500);
+
+    // Pilotage YouTube
+    const modal = document.getElementById('modal-anomalocaris');
+    const viewVideo = document.getElementById('view-video-card');
+    const viewNext = document.getElementById('view-next-card');
+    let ytPlayer = null;
+
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('yt-player-container', {
+        height: '100%',
+        width: '100%',
+        videoId: 'vG5wsDhYWMc',
+        playerVars: {
+          autoplay: 0,
+          controls: 1,
+          rel: 0,
+          playsinline: 1
+        },
+        events: {
+          'onReady': (e) => {
+            e.target.unMute();
+            e.target.setVolume(100);
+          },
+          'onStateChange': (e) => {
+            if (e.data === YT.PlayerState.ENDED) {
+              showNextCard();
+            }
+          }
+        }
+      });
+    }
+
+    function showNextCard() {
+      viewVideo.style.display = 'none';
+      viewNext.style.display = 'block';
+    }
+
+    function showVideoCard() {
+      viewNext.style.display = 'none';
+      viewVideo.style.display = 'block';
+      if (ytPlayer && ytPlayer.seekTo) {
+        ytPlayer.seekTo(0);
+        ytPlayer.playVideo();
+      }
+    }
+
+    function openModal(id) {
+      modal.classList.add('active');
+      viewNext.style.display = 'none';
+      viewVideo.style.display = 'block';
+
+      if (ytPlayer && ytPlayer.playVideo) {
+        ytPlayer.seekTo(0);
+        ytPlayer.unMute();
+        ytPlayer.setVolume(100);
+        ytPlayer.playVideo();
+      }
+    }
+
+    function closeModal(id) {
+      modal.classList.remove('active');
+      if (ytPlayer && ytPlayer.pauseVideo) {
+        ytPlayer.pauseVideo();
+      }
+    }
+
+    window.onclick = function(event) {
+      if (event.target === modal) closeModal();
+    };
+
+    window.onkeydown = function(event) {
+      if (event.key === 'Escape') {
+        closeModal();
+        document.getElementById('logbook').classList.remove('open');
+      }
+    };
+  </script>
+</body>
+</html>
