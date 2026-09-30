@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mission Burgess - Exploration au Projecteur (-508 Ma)</title>
+  <style>
+    :root {
+      --bg-payne: #0a0e14;
+      --bg-card: #151d27;
+      --bg-surface: #1b2634;
+      --border-subtle: rgba(255, 255, 255, 0.1);
+      
+      --glow-red: #ff3344;
+      --glow-pink: #ff2a85;
+      --glow-cyan: #00e5ff;
+      --glow-amber: #ffaa00;
+      --glow-green: #00ff88;
+      --glow-purple: #bd00ff;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: none;
+    }
+
+    body {
+      background-color: #000;
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    header {
+      background: rgba(10, 14, 20, 0.96);
+      padding: 0.85rem 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mission-pill {
+      background: linear-gradient(135deg, #0284c7, #00ff88);
+      color: #041017;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    .btn-logbook {
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid var(--glow-cyan);
+      color: var(--glow-cyan);
+      padding: 7px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* SCÈNE PRINCIPALE */
+    .scene-container {
+      position: relative;
+      margin-top: 58px;
+      width: 100vw;
+      height: calc(100vh - 58px);
+      background: url('https://drive.google.com/thumbnail?id=1Nem_R3-lEHFTtEn5KgYVy-hZWJKYlt0e&sz=w1920') no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    /* BALISES INITIALEMENT CACHÉES SOUS L'OBSCURITÉ */
+    .beacon {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 5; /* Sous la couche d'obscurité */
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    /* Rendue visible et cliquable UNIQUEMENT si balayée par la lampe */
+    .beacon.in-light {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .beacon.label-left {
+      flex-direction: row-reverse;
+    }
+
+    .beacon-pulse-box {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .beacon-core {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      z-index: 3;
+      animation: coreGlow 1.2s ease-in-out infinite alternate;
+    }
+
+    .beacon-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      animation: rippleWave 2s cubic-bezier(0.1, 0.5, 0.2, 1) infinite;
+    }
+    .beacon-ring.delay1 { animation-delay: 0.65s; }
+    .beacon-ring.delay2 { animation-delay: 1.3s; }
+
+    @keyframes coreGlow {
+      0% { transform: scale(0.85); box-shadow: 0 0 10px currentColor; }
+      100% { transform: scale(1.3); box-shadow: 0 0 25px currentColor, 0 0 35px currentColor; }
+    }
+
+    @keyframes rippleWave {
+      0% { transform: scale(0.3); opacity: 1; border-width: 3px; }
+      100% { transform: scale(2.6); opacity: 0; border-width: 1px; }
+    }
+
+    .beacon-label {
+      background: rgba(18, 24, 32, 0.94);
+      border: 1.5px solid currentColor;
+      padding: 7px 14px;
+      border-radius: 30px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      white-space: nowrap;
+      transition: transform 0.2s ease;
+    }
+
+    .beacon:hover .beacon-label {
+      transform: scale(1.08) translateY(-2px);
+    }
+
+    .beacon-red { color: var(--glow-red); }
+    .beacon-red .beacon-core { background: var(--glow-red); }
+
+    .beacon-pink { color: var(--glow-pink); }
+    .beacon-pink .beacon-core { background: var(--glow-pink); }
+
+    /* COUCHE D'OBSCURITÉ DENSE + FAISCEAU ÉTROIT */
+    #darkness-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      background-color: #000;
+      transition: opacity 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #darkness-layer.illuminated {
+      opacity: 0 !important;
+    }
+
+    /* CONSIGNE D'EXPLORATION */
+    .intro-banner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(16, 23, 33, 0.92);
+      border: 1px solid var(--glow-cyan);
+      padding: 1.4rem 2rem;
+      border-radius: 16px;
+      text-align: center;
+      max-width: 460px;
+      z-index: 15;
+      pointer-events: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+      transition: opacity 0.5s ease;
+    }
+
+    .intro-banner h2 {
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .intro-banner p {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: #c9d7e8;
+    }
+
+    .victory-badge {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) translateY(50px);
+      background: rgba(16, 23, 33, 0.95);
+      border: 2px solid var(--glow-green);
+      padding: 14px 28px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.35);
+      opacity: 0;
+      z-index: 40;
+      transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .victory-badge.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* MODALES */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 12, 16, 0.94);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 780px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95);
+      position: relative;
+    }
+
+    .btn-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      z-index: 30;
+      transition: background 0.2s;
+    }
+    .btn-close:hover { background: var(--glow-red); }
+
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-top: 56.25%;
+      background: #000;
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
+      overflow: hidden;
+    }
+    .video-viewport > div,
+    .video-viewport iframe {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      border: 0 !important;
+    }
+
+    .card-content {
+      padding: 1.8rem 2rem;
+    }
+
+    .species-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.2rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .species-title {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .species-subtitle {
+      font-size: 0.9rem;
+      color: var(--glow-cyan);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.4rem;
+    }
+
+    .stat-box {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: currentColor;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .desc-text {
+      font-size: 0.93rem;
+      line-height: 1.65;
+      color: #cbd5e1;
+      margin-bottom: 1.2rem;
+    }
+
+    .btn-start-quiz {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #041017;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-start-quiz:hover { transform: translateY(-2px) scale(1.03); }
+
+    /* QUIZ */
+    .view-panel { transition: opacity 0.35s ease; }
+    .panel-quiz-view {
+      display: none;
+      padding: 2rem 2.2rem;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .quiz-badge {
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .quiz-card {
+      background: var(--bg-surface);
+      border-radius: 12px;
+      padding: 1.4rem;
+      margin-bottom: 1.2rem;
+      border-left: 5px solid transparent;
+    }
+
+    .quiz-card.theme-cyan { border-left-color: var(--glow-cyan); background: linear-gradient(145deg, #1b2634, #192b3a); }
+    .quiz-card.theme-amber { border-left-color: var(--glow-amber); background: linear-gradient(145deg, #1b2634, #2a261f); }
+    .quiz-card.theme-purple { border-left-color: var(--glow-purple); background: linear-gradient(145deg, #1b2634, #261f33); }
+    .quiz-card.theme-pink { border-left-color: var(--glow-pink); background: linear-gradient(145deg, #1b2634, #2c1b26); }
+
+    .quiz-question-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .q-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #041017;
+      background: #fff;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .option-btn {
+      background: rgba(14, 20, 28, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      padding: 11px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn .opt-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .option-btn:hover:not(.locked) {
+      border-color: var(--glow-cyan);
+      background: rgba(0, 229, 255, 0.14);
+      transform: translateX(6px);
+      color: #fff;
+    }
+
+    .option-btn.correct {
+      background: rgba(0, 255, 136, 0.25) !important;
+      border-color: var(--glow-green) !important;
+      color: #fff !important;
+      box-shadow: 0 0 14px rgba(0, 255, 136, 0.3);
+    }
+
+    .option-btn.wrong {
+      background: rgba(255, 51, 68, 0.25) !important;
+      border-color: var(--glow-red) !important;
+      color: #ffa3af !important;
+    }
+
+    .feedback-box {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      padding: 9px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+    .feedback-box.show { display: block; }
+    .feedback-box.correct { background: rgba(0, 255, 136, 0.15); color: #99ffd0; border: 1px solid var(--glow-green); }
+    .feedback-box.wrong { background: rgba(255, 51, 68, 0.15); color: #ffb3bd; border: 1px solid var(--glow-red); }
+
+    .btn-replay-video {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    /* CARNET */
+    .logbook-drawer {
+      position: fixed;
+      top: 58px;
+      right: -360px;
+      width: 350px;
+      height: calc(100vh - 58px);
+      background: rgba(18, 24, 32, 0.97);
+      border-left: 1px solid var(--border-subtle);
+      padding: 1.5rem;
+      z-index: 60;
+      transition: right 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+    }
+    .logbook-drawer.open { right: 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="mission-pill">MISSION COLLÈGE</span>
+      <h1>Paléo-Exploration : Les Schistes de Burgess</h1>
+    </div>
+    
+    <button class="btn-logbook" onclick="toggleLogbook()">
+      📓 Spécimens identifiés (<span id="log-count">0</span>/2)
+    </button>
+  </header>
+
+  <main class="scene-container" id="scene">
+    <!-- 1. LES BALISES SONT SOUS LE NOIR ET CACHÉES PAR DÉFAUT -->
+    <div class="beacon beacon-red" id="beacon-ano" style="top: 28%; left: 68%;" onclick="openModal('modal-anomalocaris')">
+      <div class="beacon-pulse-box">
+        <div class="beacon-ring"></div>
+        <div class="beacon-ring delay1"></div>
+        <div class="beacon-ring delay2"></div>
+        <div class="beacon-core"></div>
+      </div>
+      <div class="beacon-label">
+        <span>Anomalocaris canadensis</span>
+      </div>
+    </div>
+
+    <div class="beacon beacon-pink label-left" id="beacon-opa" style="top: 56%; left: 45%;" onclick="openModal('modal-opabinia')">
+      <div class="beacon-pulse-box">
+        <div class="beacon-ring"></div>
+        <div class="beacon-ring delay1"></div>
+        <div class="beacon-ring delay2"></div>
+        <div class="beacon-core"></div>
+      </div>
+      <div class="beacon-label">
+        <span>Opabinia regalis</span>
+      </div>
+    </div>
+
+    <!-- 2. COUCHE D'OBSCURITÉ RECOUVRANT TOUT L'ÉCRAN -->
+    <div id="darkness-layer"></div>
+
+    <!-- CONSIGNE INITIALE -->
+    <div class="intro-banner" id="intro-banner">
+      <h2>🔦 Faisceau d'exploration</h2>
+      <p>L'océan cambrien est plongé dans le noir complet.<br>
+      <strong>Faites glisser votre doigt ou votre souris</strong> pour balayer les fonds marins au projecteur et repérer les animaux dissimulés.</p>
+    </div>
+
+    <!-- BANNIÈRE FINALE PLEIN JOUR -->
+    <div class="victory-badge" id="victory-badge">
+      <span style="font-size: 1.4rem;">🌟</span>
+      <span>Mission accomplie ! L'écosystème de Burgess est entièrement révélé.</span>
+    </div>
+  </main>
+
+  <!-- CARNET DE MISSION -->
+  <aside class="logbook-drawer" id="logbook">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size: 1.15rem; color: #fff;">📓 Carnet de Paléontologie</h2>
+      <button onclick="toggleLogbook()" style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <div style="background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.3); padding: 12px; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; color: #cdeefe; margin-bottom: 1.5rem;">
+      <strong>🎯 Objectif :</strong><br>
+      Balayez le fond au projecteur pour débusquer les 2 spécimens et réussir leurs défis d'enquête.
+    </div>
+
+    <div class="specimen-item" id="log-item-ano" style="background: var(--bg-surface); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; opacity: 0.5;">
+      <span style="font-size: 1.3rem;">🦐</span>
+      <div>
+        <strong style="color:#fff; display:block; font-size:0.88rem;">1. Anomalocaris</strong>
+        <span id="log-status-ano" style="color:var(--text-muted); font-size:0.75rem;">À localiser au projecteur</span>
+      </div>
+    </div>
+
+    <div class="specimen-item" id="log-item-opa" style="background: var(--bg-surface); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; opacity: 0.5;">
+      <span style="font-size: 1.3rem;">🌸</span>
+      <div>
+        <strong style="color:#fff; display:block; font-size:0.88rem;">2. Opabinia</strong>
+        <span id="log-status-opa" style="color:var(--text-muted); font-size:0.75rem;">À localiser au projecteur</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MODALE 1 : ANOMALOCARIS -->
+  <div class="modal-overlay" id="modal-anomalocaris">
+    <div class="card">
+      <button class="btn-close" onclick="closeModal('modal-anomalocaris')">&times;</button>
+      
+      <div id="panel-video-ano" class="view-panel">
+        <div class="video-viewport">
+          <div id="yt-player-ano"></div>
+        </div>
+
+        <div class="card-content">
+          <div class="species-header">
+            <div>
+              <h2 class="species-title">Anomalocaris canadensis</h2>
+              <div class="species-subtitle">« Crevette anormale du Canada » — Radiodonta</div>
+            </div>
+            <button class="btn-start-quiz" style="background: linear-gradient(135deg, #ff3344, #ffaa00);" onclick="switchToQuiz('ano')">
+              ⚡ Passer au Défi d'Enquête
+            </button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box" style="color: var(--glow-red);">
+              <div class="stat-label">Niveau trophique</div>
+              <div class="stat-value">Superprédateur</div>
+            </div>
+            <div class="stat-box" style="color: var(--glow-amber);">
+              <div class="stat-label">Envergure</div>
+              <div class="stat-value">60 à 100 cm</div>
+            </div>
+            <div class="stat-box" style="color: var(--glow-cyan);">
+              <div class="stat-label">Vision</div>
+              <div class="stat-value">16 000 facettes</div>
+            </div>
+          </div>
+
+          <p class="desc-text">
+            Visionnez attentivement la reconstitution en 3D. Dès la fin de la vidéo, le questionnaire d'observation s'activera automatiquement.
+          </p>
+        </div>
+      </div>
+
+      <div id="panel-quiz-ano" class="panel-quiz-view">
+        <div class="quiz-header">
+          <div>
+            <span class="quiz-badge" style="background: rgba(255, 51, 68, 0.2); border: 1px solid var(--glow-red); color: #ff8899;">DÉFI 1 : LE SUPERPRÉDATEUR</span>
+            <h2 style="font-size: 1.4rem; color: #fff; margin-top: 4px;">Rapport : Anomalocaris</h2>
+          </div>
+          <div style="font-family: monospace; font-size: 0.9rem; color: var(--glow-cyan);">
+            Score : <span id="score-ano" style="color: var(--glow-green); font-weight: bold;">0</span> / 3
+          </div>
+        </div>
+
+        <div class="quiz-card theme-cyan" id="q-ano-1">
+          <div class="quiz-question-title">
+            <span class="q-number" style="background: var(--glow-cyan);">1</span>
+            Comment Anomalocaris se déplace-t-il dans l'eau ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer('ano', 1, 0, false)"><span class="opt-badge">A</span><span>En marchant sur le fond marin avec des pattes articulées</span></button>
+            <button class="option-btn" onclick="checkAnswer('ano', 1, 1, true)"><span class="opt-badge">B</span><span>En ondulant grâce à des palettes latérales souples (nage active)</span></button>
+            <button class="option-btn" onclick="checkAnswer('ano', 1, 2, false)"><span class="opt-badge">C</span><span>Par propulsion à réaction comme les pieuvres</span></button>
+          </div>
+          <div class="feedback-box" id="fb-ano-1"></div>
+        </div>
+
+        <div class="quiz-card theme-amber" id="q-ano-2">
+          <div class="quiz-question-title">
+            <span class="q-number" style="background: var(--glow-amber);">2</span>
+            Quel est son rôle dans la chaîne alimentaire cambrienne ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer('ano', 2, 0, true)"><span class="opt-badge">A</span><span>Superprédateur : il chasse d'autres animaux marins</span></button>
+            <button class="option-btn" onclick="checkAnswer('ano', 2, 1, false)"><span class="opt-badge">B</span><span>Herbivore : il broute les tapis d'algues</span></button>
+            <button class="option-btn" onclick="checkAnswer('ano', 2, 2, false)"><span class="opt-badge">C</span><span>Détritivore : il filtre le sable</span></button>
+          </div>
+          <div class="feedback-box" id="fb-ano-2"></div>
+        </div>
+
+        <div class="quiz-card theme-purple" id="q-ano-3">
+          <div class="quiz-question-title">
+            <span class="q-number" style="background: var(--glow-purple); color: #fff;">3</span>
+            Comment capture-t-il ses proies ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer('ano', 3, 0, false)"><span class="opt-badge">A</span><span>Il les paralyse avec des dards venimeux</span></button>
+            <button class="option-btn" onclick="checkAnswer('ano', 3, 1, true)"><span class="opt-badge">B</span><span>Il les saisit avec ses deux bras antérieurs épineux</span></button>
+            <button class="option-btn" onclick="checkAnswer('ano', 3, 2, false)"><span class="opt-badge">C</span><span>Il les aspire d'un coup dans son œsophage</span></button>
+          </div>
+          <div class="feedback-box" id="fb-ano-3"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.5rem;">
+          <button class="btn-replay-video" onclick="switchToVideo('ano')">↺ Revoir la vidéo</button>
+          <div id="congrats-ano" style="display:none; color:var(--glow-green); font-weight:bold;">✓ Rapport Anomalocaris validé !</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODALE 2 : OPABINIA -->
+  <div class="modal-overlay" id="modal-opabinia">
+    <div class="card">
+      <button class="btn-close" onclick="closeModal('modal-opabinia')">&times;</button>
+      
+      <div id="panel-video-opa" class="view-panel">
+        <div class="video-viewport">
+          <div id="yt-player-opa"></div>
+        </div>
+
+        <div class="card-content">
+          <div class="species-header">
+            <div>
+              <h2 class="species-title">Opabinia regalis</h2>
+              <div class="species-subtitle">« L'énigme à 5 yeux » — Arthropode souche</div>
+            </div>
+            <button class="btn-start-quiz" style="background: linear-gradient(135deg, #ff2a85, #bd00ff); color: #fff;" onclick="switchToQuiz('opa')">
+              ⚡ Défi d'Enquête Opabinia
+            </button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box" style="color: var(--glow-pink);">
+              <div class="stat-label">Champ visuel</div>
+              <div class="stat-value">5 yeux à 360°</div>
+            </div>
+            <div class="stat-box" style="color: var(--glow-cyan);">
+              <div class="stat-label">Outil de chasse</div>
+              <div class="stat-value">Trompe avec pince</div>
+            </div>
+            <div class="stat-box" style="color: var(--glow-amber);">
+              <div class="stat-label">Taille réelle</div>
+              <div class="stat-value">4 à 7 cm</div>
+            </div>
+          </div>
+
+          <p class="desc-text">
+            Observez la vidéo : remarquez comment il utilise sa trompe flexible pour sonder la vase et attraper de petits vers benthiques. À la fin de la vidéo, le questionnaire s'activera.
+          </p>
+        </div>
+      </div>
+
+      <div id="panel-quiz-opa" class="panel-quiz-view">
+        <div class="quiz-header">
+          <div>
+            <span class="quiz-badge" style="background: rgba(255, 42, 133, 0.2); border: 1px solid var(--glow-pink); color: #ff80b7;">DÉFI 2 : L'ÉTRANGÈTE ÉVOLUTIVE</span>
+            <h2 style="font-size: 1.4rem; color: #fff; margin-top: 4px;">Rapport : Opabinia</h2>
+          </div>
+          <div style="font-family: monospace; font-size: 0.9rem; color: var(--glow-pink);">
+            Score : <span id="score-opa" style="color: var(--glow-green); font-weight: bold;">0</span> / 3
+          </div>
+        </div>
+
+        <div class="quiz-card theme-pink" id="q-opa-1">
+          <div class="quiz-question-title">
+            <span class="q-number" style="background: var(--glow-pink); color: #fff;">1</span>
+            Combien d'yeux possède Opabinia pour surveiller son environnement ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer('opa', 1, 0, false)"><span class="opt-badge">A</span><span>Deux yeux comme la majorité des animaux</span></button>
+            <button class="option-btn" onclick="checkAnswer('opa', 1, 1, true)"><span class="opt-badge">B</span><span>Cinq yeux montés sur pédoncules pour voir à 360°</span></button>
+            <button class="option-btn" onclick="checkAnswer('opa', 1, 2, false)"><span class="opt-badge">C</span><span>Aucun œil : il est aveugle</span></button>
+          </div>
+          <div class="feedback-box" id="fb-opa-1"></div>
+        </div>
+
+        <div class="quiz-card theme-cyan" id="q-opa-2">
+          <div class="quiz-question-title">
+            <span class="q-number" style="background: var(--glow-cyan);">2</span>
+            Comment utilise-t-il sa trompe frontale ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer('opa', 2, 0, false)"><span class="opt-badge">A</span><span>Pour respirer hors de l'eau</span></button>
+            <button class="option-btn" onclick="checkAnswer('opa', 2, 1, true)"><span class="opt-badge">B</span><span>Pour fouiller la vase et attraper des vers avec sa pince</span></button>
+            <button class="option-btn" onclick="checkAnswer('opa', 2, 2, false)"><span class="opt-badge">C</span><span>Pour nager à reculons</span></button>
+          </div>
+          <div class="feedback-box" id="fb-opa-2"></div>
+        </div>
+
+        <div class="quiz-card theme-amber" id="q-opa-3">
+          <div class="quiz-question-title">
+            <span class="q-number" style="background: var(--glow-amber);">3</span>
+            Quelle était la taille réelle d'un Opabinia ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer('opa', 3, 0, false)"><span class="opt-badge">A</span><span>Environ 2 mètres</span></button>
+            <button class="option-btn" onclick="checkAnswer('opa', 3, 1, true)"><span class="opt-badge">B</span><span>Environ 4 à 7 cm (la taille d'un doigt)</span></button>
+            <button class="option-btn" onclick="checkAnswer('opa', 3, 2, false)"><span class="opt-badge">C</span><span>Microscopique</span></button>
+          </div>
+          <div class="feedback-box" id="fb-opa-3"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.5rem;">
+          <button class="btn-replay-video" onclick="switchToVideo('opa')">↺ Revoir la vidéo</button>
+          <div id="congrats-opa" style="display:none; color:var(--glow-green); font-weight:bold;">✓ Rapport Opabinia validé !</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    /* ========================================================
+       1. FAISCEAU RÉDUIT DE 4 FOIS + RÉVÉLATION CONDITIONNELLE
+       ======================================================== */
+    const darknessLayer = document.getElementById('darkness-layer');
+    const scene = document.getElementById('scene');
+    const introBanner = document.getElementById('intro-banner');
+    const beaconAno = document.getElementById('beacon-ano');
+    const beaconOpa = document.getElementById('beacon-opa');
+    let isFullyIlluminated = false;
+
+    // Rayon focalisé (réduit de 4 fois : ~65px)
+    const TORCH_RADIUS = 65;
+
+    function checkProximity(x, y, beaconElem) {
+      if (isFullyIlluminated) {
+        beaconElem.classList.add('in-light');
+        return;
+      }
+      const bRect = beaconElem.getBoundingClientRect();
+      const sRect = scene.getBoundingClientRect();
+      
+      const bX = (bRect.left + bRect.width / 2) - sRect.left;
+      const bY = (bRect.top + bRect.height / 2) - sRect.top;
+
+      const dist = Math.hypot(x - bX, y - bY);
+
+      // Si le centre du faisceau touche la balise, elle s'allume
+      if (dist < TORCH_RADIUS + 35) {
+        beaconElem.classList.add('in-light');
+      } else {
+        beaconElem.classList.remove('in-light');
+      }
+    }
+
+    function updateTorch(x, y) {
+      if (isFullyIlluminated) return;
+      
+      if (introBanner) {
+        introBanner.style.opacity = '0';
+      }
+
+      // Faisceau lumineux étroit et précis
+      darknessLayer.style.background = `radial-gradient(circle ${TORCH_RADIUS}px at ${x}px ${y}px, transparent 0%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.99) 100%)`;
+
+      // Détection de survol direct des deux créatures
+      checkProximity(x, y, beaconAno);
+      checkProximity(x, y, beaconOpa);
+    }
+
+    // Événements souris
+    scene.addEventListener('mousemove', (e) => {
+      const rect = scene.getBoundingClientRect();
+      updateTorch(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    // Événements tactiles (iPad)
+    scene.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = scene.getBoundingClientRect();
+        updateTorch(touch.clientX - rect.left, touch.clientY - rect.top);
+      }
+    }, { passive: true });
+
+    scene.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = scene.getBoundingClientRect();
+        updateTorch(touch.clientX - rect.left, touch.clientY - rect.top);
+      }
+    }, { passive: true });
+
+
+    /* ========================================================
+       2. GESTION DES LECTEURS YOUTUBE & DES SCORES
+       ======================================================== */
+    let playerAno = null;
+    let playerOpa = null;
+    const scores = { ano: 0, opa: 0 };
+    const answered = { ano: {}, opa: {} };
+    const completedMissions = { ano: false, opa: false };
+
+    function onYouTubeIframeAPIReady() {
+      playerAno = new YT.Player('yt-player-ano', {
+        height: '100%',
+        width: '100%',
+        videoId: 'vG5wsDhYWMc',
+        playerVars: { autoplay: 0, controls: 1, rel: 0, playsinline: 1 },
+        events: {
+          'onReady': (e) => { e.target.unMute(); e.target.setVolume(100); },
+          'onStateChange': (e) => { if (e.data === YT.PlayerState.ENDED) switchToQuiz('ano'); }
+        }
+      });
+
+      playerOpa = new YT.Player('yt-player-opa', {
+        height: '100%',
+        width: '100%',
+        videoId: '3yuPbXmwVFw',
+        playerVars: { autoplay: 0, controls: 1, rel: 0, playsinline: 1 },
+        events: {
+          'onReady': (e) => { e.target.unMute(); e.target.setVolume(100); },
+          'onStateChange': (e) => { if (e.data === YT.PlayerState.ENDED) switchToQuiz('opa'); }
+        }
+      });
+    }
+
+    function switchToQuiz(id) {
+      document.getElementById('panel-video-' + id).style.display = 'none';
+      document.getElementById('panel-quiz-' + id).style.display = 'block';
+    }
+
+    function switchToVideo(id) {
+      document.getElementById('panel-quiz-' + id).style.display = 'none';
+      document.getElementById('panel-video-' + id).style.display = 'block';
+      const player = (id === 'ano') ? playerAno : playerOpa;
+      if (player && player.seekTo) {
+        player.seekTo(0);
+        player.playVideo();
+      }
+    }
+
+    function checkAnswer(animal, qNum, optIndex, isCorrect) {
+      if (answered[animal][qNum]) return;
+      answered[animal][qNum] = true;
+
+      const card = document.getElementById(`q-${animal}-${qNum}`);
+      const btns = card.querySelectorAll('.option-btn');
+      const clickedBtn = btns[optIndex];
+      const fb = document.getElementById(`fb-${animal}-${qNum}`);
+
+      btns.forEach(b => b.classList.add('locked'));
+
+      if (isCorrect) {
+        clickedBtn.classList.add('correct');
+        fb.className = 'feedback-box show correct';
+        fb.innerHTML = '<strong>✓ Exact !</strong> Excellente observation.';
+        scores[animal]++;
+        document.getElementById(`score-${animal}`).textContent = scores[animal];
+      } else {
+        clickedBtn.classList.add('wrong');
+        btns.forEach((b, i) => {
+          if ((animal === 'ano' && ((qNum === 1 && i === 1) || (qNum === 2 && i === 0) || (qNum === 3 && i === 1))) ||
+              (animal === 'opa' && ((qNum === 1 && i === 1) || (qNum === 2 && i === 1) || (qNum === 3 && i === 1)))) {
+            b.classList.add('correct');
+          }
+        });
+        fb.className = 'feedback-box show wrong';
+        fb.innerHTML = '<strong>✗ Erreur.</strong> Observez la bonne réponse en vert.';
+      }
+
+      if (Object.keys(answered[animal]).length === 3) {
+        document.getElementById(`congrats-${animal}`).style.display = 'block';
+        completedMissions[animal] = true;
+
+        const logItem = document.getElementById(`log-item-${animal}`);
+        const logStatus = document.getElementById(`log-status-${animal}`);
+        logItem.style.opacity = '1';
+        logItem.style.borderColor = 'var(--glow-green)';
+        logStatus.textContent = '✓ Fiche & Questionnaire validés';
+        logStatus.style.color = 'var(--glow-green)';
+
+        const validatedCount = Object.values(completedMissions).filter(Boolean).length;
+        document.getElementById('log-count').textContent = validatedCount;
+
+        // DISSIPATION DE L'OBSCURITÉ DÈS QUE LES 2 FICHES SONT FINIES
+        if (completedMissions.ano && completedMissions.opa) {
+          triggerFullDaylight();
+        }
+      }
+    }
+
+    function triggerFullDaylight() {
+      isFullyIlluminated = true;
+      darknessLayer.classList.add('illuminated');
+      document.getElementById('victory-badge').classList.add('show');
+      beaconAno.classList.add('in-light');
+      beaconOpa.classList.add('in-light');
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+
+      if (id === 'modal-anomalocaris') {
+        document.getElementById('panel-quiz-ano').style.display = 'none';
+        document.getElementById('panel-video-ano').style.display = 'block';
+        if (playerAno && playerAno.playVideo) {
+          playerAno.seekTo(0);
+          playerAno.unMute();
+          playerAno.setVolume(100);
+          playerAno.playVideo();
+        }
+      }
+
+      if (id === 'modal-opabinia') {
+        document.getElementById('panel-quiz-opa').style.display = 'none';
+        document.getElementById('panel-video-opa').style.display = 'block';
+        if (playerOpa && playerOpa.playVideo) {
+          playerOpa.seekTo(0);
+          playerOpa.unMute();
+          playerOpa.setVolume(100);
+          playerOpa.playVideo();
+        }
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      if (id === 'modal-anomalocaris' && playerAno && playerAno.pauseVideo) playerAno.pauseVideo();
+      if (id === 'modal-opabinia' && playerOpa && playerOpa.pauseVideo) playerOpa.pauseVideo();
+    }
+
+    function toggleLogbook() {
+      document.getElementById('logbook').classList.toggle('open');
+    }
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal-overlay')) {
+        closeModal(event.target.id);
+      }
+    };
+
+    window.onkeydown = function(event) {
+      if (event.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(m => closeModal(m.id));
+        document.getElementById('logbook').classList.remove('open');
+      }
+    };
+  </script>
+</body>
+</html>
