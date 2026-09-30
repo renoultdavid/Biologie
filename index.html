@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reconstitution du Cambrien - Faune de Burgess</title>
+  <style>
+    :root {
+      /* Palette Gris de Payne & Mode Nuit */
+      --bg-payne-deep: #121820;
+      --bg-payne-card: #1a222c;
+      --bg-payne-elevated: #222d3b;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.3);
+
+      /* Catégories & Accents */
+      --color-predator: #ff5252;
+      --color-size: #f59e0b;
+      --color-vision: #38bdf8;
+      --color-fossil: #a855f7;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-payne-deep);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* En-tête sobre */
+    header {
+      background: rgba(18, 24, 32, 0.94);
+      backdrop-filter: blur(12px);
+      padding: 0.85rem 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-tag {
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      color: #041017;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 5px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .brand h1 {
+      font-size: 1.12rem;
+      font-weight: 600;
+    }
+
+    /* Scène immersive */
+    .scene-container {
+      position: relative;
+      margin-top: 58px;
+      width: 100vw;
+      height: calc(100vh - 58px);
+      background: 
+        radial-gradient(ellipse at 50% 50%, rgba(18, 24, 32, 0.25) 0%, rgba(10, 14, 18, 0.85) 90%),
+        url('https://drive.google.com/thumbnail?id=118W3D2MYyAycygi95yvpkqZWwtxQcqka&sz=w1920') no-repeat center center;
+      background-size: cover;
+      display: flex;
+      align-items: flex-end;
+      padding: 2.5rem;
+    }
+
+    .scene-intro {
+      max-width: 480px;
+      background: rgba(26, 34, 44, 0.88);
+      padding: 1.4rem 1.6rem;
+      border-radius: 14px;
+      border: 1px solid var(--border-glow);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+    }
+
+    .scene-intro h2 {
+      font-size: 1.2rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.4rem;
+    }
+
+    .scene-intro p {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* Balise pulsante */
+    .hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+      transition: transform 0.2s ease;
+    }
+
+    .hotspot:hover {
+      transform: translate(-50%, -50%) scale(1.06);
+    }
+
+    .pulse-wrapper {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pulse-core {
+      width: 14px;
+      height: 14px;
+      background: var(--color-predator);
+      border-radius: 50%;
+      box-shadow: 0 0 14px var(--color-predator);
+    }
+
+    .pulse-halo {
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 2px solid var(--color-predator);
+      animation: pulsate 1.8s cubic-bezier(0.2, 0.8, 0.3, 1) infinite;
+    }
+
+    @keyframes pulsate {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+
+    .hotspot-chip {
+      background: rgba(18, 24, 32, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hotspot-chip svg {
+      width: 15px;
+      height: 15px;
+      fill: var(--color-predator);
+    }
+
+    /* Fenêtre modale */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 12, 16, 0.88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .card {
+      background: var(--bg-payne-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 740px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+      position: relative;
+      transform: scale(0.96);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-overlay.active .card {
+      transform: scale(1);
+    }
+
+    .btn-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      transition: background 0.2s;
+      z-index: 30;
+    }
+
+    .btn-close:hover {
+      background: var(--color-predator);
+    }
+
+    /* Cadre vidéo épuré (masque la barre haute et le titre YouTube) */
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* Ratio 16:9 */
+      background: #000;
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
+      overflow: hidden;
+    }
+
+    .video-viewport iframe {
+      position: absolute;
+      top: -12%;
+      left: -5%;
+      width: 110%;
+      height: 124%;
+      border: 0;
+      pointer-events: auto;
+    }
+
+    .card-content {
+      padding: 1.8rem 2rem;
+    }
+
+    .fiche-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.4rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .species-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .species-subtitle {
+      font-size: 0.92rem;
+      color: var(--color-vision);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 82, 82, 0.12);
+      color: var(--color-predator);
+      border: 1px solid rgba(255, 82, 82, 0.35);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Statistiques avec icônes */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-box {
+      background: var(--bg-payne-elevated);
+      border-radius: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-subtle);
+      border-left-width: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-box.c-predator { border-left-color: var(--color-predator); }
+    .stat-box.c-size { border-left-color: var(--color-size); }
+    .stat-box.c-vision { border-left-color: var(--color-vision); }
+    .stat-box.c-fossil { border-left-color: var(--color-fossil); }
+
+    .stat-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    .stat-head svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .stat-val {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .desc-text {
+      font-size: 0.94rem;
+      line-height: 1.65;
+      color: #cbd5e1;
+      margin-bottom: 1.4rem;
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 1.2rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .icon-bullet {
+      flex-shrink: 0;
+      margin-top: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-bullet svg {
+      width: 11px;
+      height: 11px;
+      fill: var(--color-vision);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="brand-tag">Explosion Cambrienne</span>
+      <h1>Biotope de Burgess</h1>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="#38bdf8"><circle cx="12" cy="12" r="10"/></svg>
+      -508 Millions d'années
+    </div>
+  </header>
+
+  <main class="scene-container">
+    <div class="hotspot" style="top: 45%; left: 52%;" onclick="openModal('modal-anomalocaris')">
+      <div class="pulse-wrapper">
+        <div class="pulse-halo"></div>
+        <div class="pulse-core"></div>
+      </div>
+      <div class="hotspot-chip">
+        <svg viewBox="0 0 24 24"><path d="M12 2L15 8L22 9L17 14L18 21L12 17.5L6 21L7 14L2 9L9 8L12 2Z"/></svg>
+        <span>Anomalocaris canadensis</span>
+      </div>
+    </div>
+
+    <div class="scene-intro">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Paléo-Océan
+      </h2>
+      <p>Cliquez sur la balise pour afficher la reconstitution et la fiche anatomique du premier superprédateur marin.</p>
+    </div>
+  </main>
+
+  <!-- Fiche Pop-up -->
+  <div class="modal-overlay" id="modal-anomalocaris">
+    <div class="card">
+      <button class="btn-close" onclick="closeModal('modal-anomalocaris')">&times;</button>
+      
+      <!-- Conteneur vidéo avec cadrage cinéma sans bandeaux YouTube -->
+      <div class="video-viewport">
+        <iframe 
+          id="yt-frame"
+          data-src="https://www.youtube.com/embed/vG5wsDhYWMc?autoplay=1&mute=1&controls=0&loop=1&playlist=vG5wsDhYWMc&rel=0&showinfo=0&modestbranding=1&iv_load_policy=3" 
+          src=""
+          allow="autoplay; encrypted-media; picture-in-picture" 
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <div class="card-content">
+        <div class="fiche-header">
+          <div>
+            <h2 class="species-name">Anomalocaris</h2>
+            <div class="species-subtitle">« Crevette anormale du Canada » — Radiodonta</div>
+          </div>
+          <div class="badge-status">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+            Apex Predator
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box c-predator">
+            <div class="stat-head">
+              <svg fill="var(--color-predator)" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
+              <span>Régime</span>
+            </div>
+            <div class="stat-val" style="color: #ff8585;">Carnivore actif</div>
+          </div>
+
+          <div class="stat-box c-size">
+            <div class="stat-head">
+              <svg fill="var(--color-size)" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg>
+              <span>Envergure</span>
+            </div>
+            <div class="stat-val" style="color: #fde047;">60 à 100 cm</div>
+          </div>
+
+          <div class="stat-box c-vision">
+            <div class="stat-head">
+              <svg fill="var(--color-vision)" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              <span>Vision</span>
+            </div>
+            <div class="stat-val" style="color: #7dd3fc;">16 000 facettes</div>
+          </div>
+
+          <div class="stat-box c-fossil">
+            <div class="stat-head">
+              <svg fill="var(--color-fossil)" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+              <span>Gisement</span>
+            </div>
+            <div class="stat-val" style="color: #d8b4fe;">Schistes de Burgess</div>
+          </div>
+        </div>
+
+        <p class="desc-text">
+          Considéré comme le premier superprédateur de l'histoire animale, <strong>Anomalocaris</strong> régnait au sommet de la chaîne trophique. Ses lobes latéraux souples lui assuraient une grande vélocité, tandis que ses deux appendices frontaux barbelés rabattaient ses proies vers un appareil buccal circulaire unique.
+        </p>
+
+        <ul class="feature-list">
+          <li class="feature-item">
+            <div class="icon-bullet">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div><strong>Vision stéréoscopique :</strong> deux yeux pédonculés composés de milliers de facettes adaptés à la pénombre marine.</div>
+          </li>
+          <li class="feature-item">
+            <div class="icon-bullet">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div><strong>Cône oral denté :</strong> plaques disposées en cercle broyant les carapaces des arthropodes cambriens.</div>
+          </li>
+          <li class="feature-item">
+            <div class="icon-bullet">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <div><strong>Énigme fossile :</strong> le corps, les bras et la bouche ont longtemps été pris pour trois espèces distinctes avant d'être correctement assemblés.</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('modal-anomalocaris');
+    const ytFrame = document.getElementById('yt-frame');
+
+    function openModal(id) {
+      modal.classList.add('active');
+      // Déclenchement automatique sans clic
+      if (ytFrame && ytFrame.getAttribute('data-src')) {
+        ytFrame.src = ytFrame.getAttribute('data-src');
+      }
+    }
+
+    function closeModal(id) {
+      modal.classList.remove('active');
+      // Arrêt immédiat de la vidéo à la fermeture
+      if (ytFrame) {
+        ytFrame.src = "";
+      }
+    }
+
+    window.onclick = function(event) {
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
+
+    window.onkeydown = function(event) {
+      if (event.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    };
+  </script>
+</body>
+</html>
