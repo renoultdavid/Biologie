@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Burgess - Océan Cambrien (-508 Ma)</title>
+  <style>
+    :root {
+      --bg-payne: #10161f;
+      --bg-card: #16202c;
+      --bg-surface: #1e2b3a;
+      --border-subtle: rgba(255, 255, 255, 0.1);
+      
+      --glow-red: #ff3344;
+      --glow-pink: #ff2a85;
+      --glow-cyan: #00e5ff;
+      --glow-amber: #ffaa00;
+      --glow-green: #00ff88;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-payne);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    header {
+      background: rgba(16, 22, 31, 0.96);
+      padding: 0.85rem 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mission-pill {
+      background: linear-gradient(135deg, #0284c7, #00ff88);
+      color: #041017;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    .btn-logbook {
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid var(--glow-cyan);
+      color: var(--glow-cyan);
+      padding: 7px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-logbook:hover {
+      background: var(--glow-cyan);
+      color: #041017;
+      box-shadow: 0 0 15px var(--glow-cyan);
+    }
+
+    /* Nouvelle image de fond */
+    .scene-container {
+      position: relative;
+      margin-top: 58px;
+      width: 100vw;
+      height: calc(100vh - 58px);
+      background: 
+        radial-gradient(ellipse at 50% 50%, rgba(16, 22, 31, 0.05) 0%, rgba(8, 12, 17, 0.8) 95%),
+        url('https://drive.google.com/thumbnail?id=1Nem_R3-lEHFTtEn5KgYVy-hZWJKYlt0e&sz=w1920') no-repeat center center;
+      background-size: cover;
+      overflow: hidden;
+    }
+
+    .env-banner {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(18, 24, 32, 0.88);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--glow-cyan);
+      line-height: 1.6;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Balises ultra-pulsantes */
+    .beacon {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+    }
+
+    .beacon-pulse-box {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .beacon-core {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      z-index: 3;
+      animation: coreGlow 1.2s ease-in-out infinite alternate;
+    }
+
+    .beacon-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2.5px solid currentColor;
+      animation: rippleWave 2s cubic-bezier(0.1, 0.5, 0.2, 1) infinite;
+    }
+    .beacon-ring.delay1 { animation-delay: 0.65s; }
+    .beacon-ring.delay2 { animation-delay: 1.3s; }
+
+    @keyframes coreGlow {
+      0% { transform: scale(0.85); box-shadow: 0 0 10px currentColor; }
+      100% { transform: scale(1.3); box-shadow: 0 0 25px currentColor, 0 0 40px currentColor; }
+    }
+
+    @keyframes rippleWave {
+      0% { transform: scale(0.3); opacity: 1; border-width: 3px; }
+      100% { transform: scale(2.8); opacity: 0; border-width: 1px; }
+    }
+
+    .beacon-label {
+      background: rgba(18, 24, 32, 0.94);
+      border: 1.5px solid currentColor;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: labelGlow 2s ease-in-out infinite alternate;
+      transition: transform 0.2s ease;
+    }
+
+    @keyframes labelGlow {
+      0% { box-shadow: 0 0 8px rgba(0,0,0,0.5); }
+      100% { box-shadow: 0 0 20px currentColor; }
+    }
+
+    .beacon:hover .beacon-label {
+      transform: scale(1.08) translateY(-2px);
+    }
+
+    .beacon-red { color: var(--glow-red); }
+    .beacon-red .beacon-core { background: var(--glow-red); }
+
+    .beacon-pink { color: var(--glow-pink); }
+    .beacon-pink .beacon-core { background: var(--glow-pink); }
+
+    .beacon-amber { color: var(--glow-amber); }
+    .beacon-amber .beacon-core { background: var(--glow-amber); }
+
+    /* Modales */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 12, 16, 0.92);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 760px;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+      position: relative;
+    }
+
+    .btn-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      z-index: 30;
+      transition: background 0.2s;
+    }
+    .btn-close:hover { background: var(--glow-red); }
+
+    .video-viewport {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background: #000;
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
+      overflow: hidden;
+    }
+    .video-viewport div {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .card-content {
+      padding: 1.8rem 2rem;
+    }
+
+    .species-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.2rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .species-title {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .species-subtitle {
+      font-size: 0.9rem;
+      color: var(--glow-cyan);
+      font-style: italic;
+      margin-top: 2px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.4rem;
+    }
+
+    .stat-box {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: currentColor;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mini-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+      animation: coreGlow 1s infinite alternate;
+    }
+
+    .stat-value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .desc-text {
+      font-size: 0.93rem;
+      line-height: 1.65;
+      color: #cbd5e1;
+      margin-bottom: 1.2rem;
+    }
+
+    .btn-start-quiz {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #0284c7, #00ff88);
+      color: #041017;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+      transition: all 0.25s ease;
+    }
+    .btn-start-quiz:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 22px rgba(0, 255, 136, 0.5);
+    }
+
+    /* Section Quiz */
+    .view-panel {
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    #panel-quiz {
+      display: none;
+      padding: 2rem 2.2rem;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .quiz-badge {
+      background: rgba(0, 255, 136, 0.15);
+      border: 1px solid var(--glow-green);
+      color: var(--glow-green);
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .score-tracker {
+      font-family: monospace;
+      font-size: 0.88rem;
+      color: var(--glow-cyan);
+    }
+
+    .quiz-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 1.4rem;
+      margin-bottom: 1.2rem;
+      transition: border-color 0.3s ease;
+    }
+    .quiz-card.answered { border-color: rgba(255, 255, 255, 0.2); }
+
+    .quiz-question-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .q-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--glow-cyan);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .option-btn {
+      background: rgba(16, 23, 32, 0.85);
+      border: 1px solid var(--border-subtle);
+      color: #cbd5e1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .option-btn:hover:not(.locked) {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--glow-cyan);
+      color: #fff;
+      transform: translateX(4px);
+    }
+
+    .option-btn.correct {
+      background: rgba(0, 255, 136, 0.2) !important;
+      border-color: var(--glow-green) !important;
+      color: #fff !important;
+      animation: popSuccess 0.35s ease;
+    }
+
+    .option-btn.wrong {
+      background: rgba(255, 51, 68, 0.2) !important;
+      border-color: var(--glow-red) !important;
+      color: #ff8899 !important;
+      animation: shakeWrong 0.35s ease;
+    }
+
+    @keyframes popSuccess {
+      0% { transform: scale(0.98); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shakeWrong {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    .feedback-box {
+      margin-top: 10px;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: none;
+    }
+    .feedback-box.show { display: block; animation: slideUp 0.3s ease; }
+    .feedback-box.correct { background: rgba(0, 255, 136, 0.1); color: #85ffc7; }
+    .feedback-box.wrong { background: rgba(255, 51, 68, 0.1); color: #ff99a8; }
+
+    .quiz-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+    }
+
+    .btn-replay-video {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .btn-replay-video:hover {
+      color: #fff;
+      border-color: #fff;
+    }
+
+    /* Carnet */
+    .logbook-drawer {
+      position: fixed;
+      top: 58px;
+      right: -360px;
+      width: 350px;
+      height: calc(100vh - 58px);
+      background: rgba(18, 24, 32, 0.97);
+      border-left: 1px solid var(--border-subtle);
+      padding: 1.5rem;
+      z-index: 60;
+      transition: right 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+    }
+    .logbook-drawer.open { right: 0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="mission-pill">MISSION COLLÈGE</span>
+      <h1>Paléo-Exploration : Les Schistes de Burgess</h1>
+    </div>
+    
+    <button class="btn-logbook" onclick="toggleLogbook()">
+      📓 Objectifs de Mission (<span id="log-count">1</span>/3)
+    </button>
+  </header>
+
+  <main class="scene-container">
+    <div class="env-banner">
+      <div>ÉPOQUE : Cambrien Moyen (-508 Ma)</div>
+      <div>ZONE : Récif littoral sous-marin</div>
+      <div>PROFONDEUR : 65 mètres (Zone photique éclairée)</div>
+      <div>BIOTOPE : Escarpement de Cathedral (Canada)</div>
+    </div>
+
+    <!-- 1. ANOMALOCARIS (Plus haut vers la droite) -->
+    <div class="beacon beacon-red" style="top: 28%; left: 68%;" onclick="openModal('modal-anomalocaris')">
+      <div class="beacon-pulse-box">
+        <div class="beacon-ring"></div>
+        <div class="beacon-ring delay1"></div>
+        <div class="beacon-ring delay2"></div>
+        <div class="beacon-core"></div>
+      </div>
+      <div class="beacon-label">
+        <span>Anomalocaris canadensis</span>
+      </div>
+    </div>
+
+    <!-- 2. OPABINIA (Rose, décalé plus à droite) -->
+    <div class="beacon beacon-pink" style="top: 56%; left: 45%;" onclick="openModal('modal-opabinia')">
+      <div class="beacon-pulse-box">
+        <div class="beacon-ring"></div>
+        <div class="beacon-ring delay1"></div>
+        <div class="beacon-ring delay2"></div>
+        <div class="beacon-core"></div>
+      </div>
+      <div class="beacon-label">
+        <span>Opabinia regalis</span>
+      </div>
+    </div>
+
+    <!-- 3. TRILOBITE (Remonté plus au-dessus) -->
+    <div class="beacon beacon-amber" style="top: 68%; left: 78%;" onclick="openModal('modal-trilobite')">
+      <div class="beacon-pulse-box">
+        <div class="beacon-ring"></div>
+        <div class="beacon-ring delay1"></div>
+        <div class="beacon-ring delay2"></div>
+        <div class="beacon-core"></div>
+      </div>
+      <div class="beacon-label">
+        <span>Olenoides serratus (Trilobite)</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- CARNET DE MISSION -->
+  <aside class="logbook-drawer" id="logbook">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size: 1.15rem; color: #fff;">📓 Carnet de Paléontologie</h2>
+      <button onclick="toggleLogbook()" style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <div style="background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.3); padding: 12px; border-radius: 8px; font-size: 0.85rem; line-height: 1.5; color: #cdeefe; margin-bottom: 1.5rem;">
+      <strong>🎯 Mission des élèves :</strong><br>
+      Explorez les 3 spécimens, visionnez la reconstitution cinématique d'Anomalocaris et complétez le mini-bilan interactif.
+    </div>
+
+    <div class="specimen-item" style="background: var(--bg-surface); padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--glow-green);">
+      <span style="font-size: 1.3rem;">🦐</span>
+      <div>
+        <strong style="color:#fff; display:block; font-size:0.88rem;">1. Anomalocaris</strong>
+        <span style="color:var(--glow-green); font-size:0.75rem;">✓ En cours d'analyse</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MODALE PRINCIPALE ANOMALOCARIS (VIDÉO + BILAN INTERACTIF) -->
+  <div class="modal-overlay" id="modal-anomalocaris">
+    <div class="card">
+      <button class="btn-close" onclick="closeModal('modal-anomalocaris')">&times;</button>
+      
+      <!-- ÉTAPE 1 : VIDÉO OFFICIELLE + FICHE ANATOMIQUE -->
+      <div id="panel-video" class="view-panel">
+        <div class="video-viewport">
+          <div id="yt-player-box"></div>
+        </div>
+
+        <div class="card-content">
+          <div class="species-header">
+            <div>
+              <h2 class="species-title">Anomalocaris canadensis</h2>
+              <div class="species-subtitle">« Crevette anormale du Canada » — Radiodonta</div>
+            </div>
+            <button class="btn-start-quiz" onclick="switchToQuiz()">
+              ⚡ Passer au Défi d'Enquête
+            </button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box" style="color: var(--glow-red);">
+              <div class="stat-label"><div class="mini-pulse"></div> Niveau trophique</div>
+              <div class="stat-value">Superprédateur</div>
+            </div>
+            <div class="stat-box" style="color: var(--glow-amber);">
+              <div class="stat-label"><div class="mini-pulse"></div> Envergure</div>
+              <div class="stat-value">60 à 100 cm</div>
+            </div>
+            <div class="stat-box" style="color: var(--glow-cyan);">
+              <div class="stat-label"><div class="mini-pulse"></div> Vision</div>
+              <div class="stat-value">16 000 facettes</div>
+            </div>
+          </div>
+
+          <p class="desc-text">
+            Visionnez attentivement la reconstitution en 3D ci-dessus. Observez la façon dont il se propulse dans la colonne d'eau et comment il utilise ses appendices frontaux. Dès la fin de la vidéo, le défi d'observation s'activera automatiquement.
+          </p>
+        </div>
+      </div>
+
+      <!-- ÉTAPE 2 : DÉFI BILAN COLLÈGE ENCHAÎNÉ AUTOMATIQUEMENT -->
+      <div id="panel-quiz" class="view-panel">
+        <div class="quiz-header">
+          <div>
+            <span class="quiz-badge">DÉFI PALÉONTOLOGIQUE EN DIRECT</span>
+            <h2 style="font-size: 1.4rem; color: #fff; margin-top: 4px;">Rapport d'Observation : Anomalocaris</h2>
+          </div>
+          <div class="score-tracker">
+            Score : <span id="quiz-score" style="color: var(--glow-green); font-weight: bold;">0</span> / 3
+          </div>
+        </div>
+
+        <!-- Question 1 : Locomotion -->
+        <div class="quiz-card" id="q-card-1">
+          <div class="quiz-question-title">
+            <span class="q-number">1</span>
+            D'après la vidéo, comment Anomalocaris se déplace-t-il dans l'eau ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer(1, 0, false)">
+              <span>A) En marchant sur le fond marin avec des pattes articulées</span>
+              <span class="opt-icon"></span>
+            </button>
+            <button class="option-btn" onclick="checkAnswer(1, 1, true)">
+              <span>B) En ondulant grâce à des palettes latérales souples (nage active)</span>
+              <span class="opt-icon"></span>
+            </button>
+            <button class="option-btn" onclick="checkAnswer(1, 2, false)">
+              <span>C) Par propulsion à réaction comme les pieuvres</span>
+              <span class="opt-icon"></span>
+            </button>
+          </div>
+          <div class="feedback-box" id="fb-1"></div>
+        </div>
+
+        <!-- Question 2 : Régime alimentaire -->
+        <div class="quiz-card" id="q-card-2">
+          <div class="quiz-question-title">
+            <span class="q-number">2</span>
+            Quel est son rôle dans la chaîne alimentaire cambrienne ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer(2, 0, true)">
+              <span>A) Superprédateur (Apex Predator) : il chasse d'autres animaux</span>
+              <span class="opt-icon"></span>
+            </button>
+            <button class="option-btn" onclick="checkAnswer(2, 1, false)">
+              <span>B) Herbivore : il broute les tapis d'algues calcaires</span>
+              <span class="opt-icon"></span>
+            </button>
+            <button class="option-btn" onclick="checkAnswer(2, 2, false)">
+              <span>C) Détritivore : il filtre les particules de sable au fond de l'eau</span>
+              <span class="opt-icon"></span>
+            </button>
+          </div>
+          <div class="feedback-box" id="fb-2"></div>
+        </div>
+
+        <!-- Question 3 : Appendices de chasse -->
+        <div class="quiz-card" id="q-card-3">
+          <div class="quiz-question-title">
+            <span class="q-number">3</span>
+            Comment capture-t-il les proies (trilobites, vers) repérées avec ses yeux ?
+          </div>
+          <div class="quiz-options">
+            <button class="option-btn" onclick="checkAnswer(3, 0, false)">
+              <span>A) Il les paralyse avec des dards venimeux</span>
+              <span class="opt-icon"></span>
+            </button>
+            <button class="option-btn" onclick="checkAnswer(3, 1, true)">
+              <span>B) Il les saisit avec ses deux bras antérieurs épineux pour les broyer</span>
+              <span class="opt-icon"></span>
+            </button>
+            <button class="option-btn" onclick="checkAnswer(3, 2, false)">
+              <span>C) Il les aspire entièrement d'un coup dans son œsophage</span>
+              <span class="opt-icon"></span>
+            </button>
+          </div>
+          <div class="feedback-box" id="fb-3"></div>
+        </div>
+
+        <div class="quiz-footer">
+          <button class="btn-replay-video" onclick="switchToVideo()">
+            ↺ Revoir la vidéo
+          </button>
+          <div id="final-congrats" style="display: none; color: var(--glow-green); font-weight: bold; font-size: 0.9rem;">
+            🎯 Félicitations ! Rapport paléontologique validé à 100% !
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODALES SECONDAIRES -->
+  <div class="modal-overlay" id="modal-opabinia">
+    <div class="card">
+      <button class="btn-close" onclick="closeModal('modal-opabinia')">&times;</button>
+      <div class="card-content" style="padding-top: 2.5rem;">
+        <h2 class="species-title">Opabinia regalis</h2>
+        <div class="species-subtitle" style="margin-bottom: 1rem;">« L'énigme à 5 yeux » — Arthropode souche</div>
+        <p class="desc-text">Cinq yeux pédonculés pour une vision à 360° et une trompe frontale articulée avec pinces pour fouiller le sédiment.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-trilobite">
+    <div class="card">
+      <button class="btn-close" onclick="closeModal('modal-trilobite')">&times;</button>
+      <div class="card-content" style="padding-top: 2.5rem;">
+        <h2 class="species-title">Olenoides serratus (Trilobite)</h2>
+        <div class="species-subtitle" style="margin-bottom: 1rem;">Arthropode benthique à carapace articulée</div>
+        <p class="desc-text">Proie benthique principale dotée d'une carapace de calcite rigide, cible fréquente des attaques d'Anomalocaris.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARGEMENT API YOUTUBE IFRAME OFFICIELLE -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+
+  <script>
+    let ytPlayer = null;
+    let isPlayerReady = false;
+    let score = 0;
+    const answeredCards = {};
+
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('yt-player-box', {
+        height: '100%',
+        width: '100%',
+        videoId: 'vG5wsDhYWMc',
+        playerVars: {
+          autoplay: 0,
+          controls: 1,
+          rel: 0,
+          playsinline: 1
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      isPlayerReady = true;
+      event.target.unMute();
+      event.target.setVolume(100);
+    }
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.ENDED) {
+        switchToQuiz();
+      }
+    }
+
+    function switchToQuiz() {
+      document.getElementById('panel-video').style.display = 'none';
+      document.getElementById('panel-quiz').style.display = 'block';
+    }
+
+    function switchToVideo() {
+      document.getElementById('panel-quiz').style.display = 'none';
+      document.getElementById('panel-video').style.display = 'block';
+      if (ytPlayer && ytPlayer.seekTo) {
+        ytPlayer.seekTo(0);
+        ytPlayer.playVideo();
+      }
+    }
+
+    function checkAnswer(questionNum, optionIndex, isCorrect) {
+      if (answeredCards[questionNum]) return;
+      answeredCards[questionNum] = true;
+
+      const card = document.getElementById('q-card-' + questionNum);
+      const btns = card.querySelectorAll('.option-btn');
+      const clickedBtn = btns[optionIndex];
+      const feedback = document.getElementById('fb-' + questionNum);
+
+      card.classList.add('answered');
+      btns.forEach(b => b.classList.add('locked'));
+
+      if (isCorrect) {
+        clickedBtn.classList.add('correct');
+        feedback.className = 'feedback-box show correct';
+        feedback.innerHTML = '<strong>✓ Excellente observation !</strong> C\'est exactement ce que révèlent la vidéo et l\'analyse anatomique.';
+        score++;
+        document.getElementById('quiz-score').textContent = score;
+      } else {
+        clickedBtn.classList.add('wrong');
+        btns.forEach((b, i) => {
+          if ((questionNum === 1 && i === 1) || (questionNum === 2 && i === 0) || (questionNum === 3 && i === 1)) {
+            b.classList.add('correct');
+          }
+        });
+        feedback.className = 'feedback-box show wrong';
+        feedback.innerHTML = '<strong>✗ Pas tout à fait.</strong> Regardez la bonne réponse en surbrillance verte.';
+      }
+
+      if (Object.keys(answeredCards).length === 3) {
+        document.getElementById('final-congrats').style.display = 'block';
+      }
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+
+      if (id === 'modal-anomalocaris') {
+        document.getElementById('panel-quiz').style.display = 'none';
+        document.getElementById('panel-video').style.display = 'block';
+
+        if (ytPlayer && ytPlayer.playVideo) {
+          ytPlayer.seekTo(0);
+          ytPlayer.unMute();
+          ytPlayer.setVolume(100);
+          ytPlayer.playVideo();
+        }
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      if (id === 'modal-anomalocaris' && ytPlayer && ytPlayer.pauseVideo) {
+        ytPlayer.pauseVideo();
+      }
+    }
+
+    function toggleLogbook() {
+      document.getElementById('logbook').classList.toggle('open');
+    }
+
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal-overlay')) {
+        closeModal(event.target.id);
+      }
+    };
+
+    window.onkeydown = function(event) {
+      if (event.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(m => closeModal(m.id));
+        document.getElementById('logbook').classList.remove('open');
+      }
+    };
+  </script>
+</body>
+</html>
